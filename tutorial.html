@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Control Financiero Demo — Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:#0b1220; color:#e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+  /* ============ SHELL EXTERNO (fondo + marco de navegador) ============ */
+  .stage {
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 40px; gap:16px;
+  }
+  .stage-title { text-align:center; max-width:720px; }
+  .stage-title h1 { font-size:22px; margin:0 0 6px; color:#f1f5f9; }
+  .stage-title p { font-size:13px; color:#94a3b8; margin:0; line-height:1.5; }
+
+  .browser-frame {
+    width:100%; max-width:1180px; background:#1e293b; border-radius:12px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5); overflow:hidden; border:1px solid #334155;
+  }
+  .browser-chrome {
+    display:flex; align-items:center; gap:10px; padding:10px 14px; background:#161f2e;
+    border-bottom:1px solid #334155;
+  }
+  .browser-dots { display:flex; gap:6px; }
+  .browser-dots span { width:11px; height:11px; border-radius:50%; display:block; }
+  .browser-dots span:nth-child(1){ background:#ef4444; }
+  .browser-dots span:nth-child(2){ background:#f59e0b; }
+  .browser-dots span:nth-child(3){ background:#10b981; }
+  .browser-url {
+    flex:1; background:#0f172a; border:1px solid #334155; border-radius:6px;
+    padding:6px 12px; font-size:12px; color:#94a3b8; font-family: 'SF Mono', Menlo, monospace;
+    display:flex; align-items:center; gap:8px;
+  }
+  .browser-url .lock { color:#10b981; font-size:11px; }
+
+  /* ============ APP embebida ============ */
+  .app-viewport {
+    position:relative; background:#0f172a; height:600px; overflow:hidden;
+  }
+  .app-inner { position:absolute; inset:0; overflow:hidden; }
+
+  .app-tabsbar {
+    display:flex; align-items:flex-end; background:#1e293b; padding:0 16px;
+    min-height:40px; border-bottom:1px solid #334155; position:relative; z-index:5;
+  }
+  .app-tab {
+    display:flex; align-items:center; gap:6px; padding:9px 14px 7px; font-size:11px; font-weight:bold;
+    border-radius:6px 6px 0 0; white-space:nowrap; color:#94a3b8; margin-top:4px;
+  }
+  .app-tab.activo { background:#0f172a; color:#e2e8f0; border:1px solid #475569; border-bottom:none; }
+  .app-tab-spacer { flex:1; }
+  .app-tab-salir { background:#334155; color:white; border-radius:4px; padding:5px 10px; font-size:11px; font-weight:bold; margin:6px 0; }
+
+  .app-body { padding:16px; height: calc(100% - 40px); overflow:hidden; position:relative; }
+
+  .grid-dashboard { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
+  .card-bal { background:#1e293b; padding:12px; border-radius:8px; border:1px solid #334155; }
+  .card-bal h4 { margin:0; font-size:9.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:.3px; }
+  .card-bal p { margin:6px 0 0; font-size:17px; font-weight:bold; }
+
+  .panel { background:#1e293b; padding:14px; border-radius:8px; border:1px solid #334155; margin-bottom:14px; }
+  .panel-title { font-size:12px; font-weight:bold; margin:0 0 10px; text-transform:uppercase; color:#e2e8f0; border-bottom:1px solid #334155; padding-bottom:6px; }
+
+  .form-row { display:grid; grid-template-columns:repeat(auto-fit, minmax(90px,1fr)); gap:8px; margin-bottom:10px; }
+  label { display:block; font-size:9.5px; font-weight:bold; margin-bottom:3px; text-transform:uppercase; color:#94a3b8; }
+  input, select {
+    width:100%; padding:7px 8px; border:1px solid #475569; border-radius:4px;
+    background:#0f172a; color:#e2e8f0; font-size:12px; font-family:inherit;
+  }
+  input:focus, select:focus { outline:2px solid #4f46e5; outline-offset:0; border-color:#4f46e5; }
+
+  .btn { padding:7px 13px; border:none; border-radius:4px; font-weight:bold; font-size:12px; cursor:default; }
+  .btn-add { background:#1e293b; border:1px solid #475569; color:white; width:100%; padding:9px; font-size:12.5px; }
+  .btn-indigo { background:#4f46e5; color:white; }
+  .btn-teal { background:#0f766e; color:white; }
+  .btn-del { background:#ef4444; color:white; padding:3px 7px; font-size:10px; border-radius:4px; }
+
+  table { width:100%; border-collapse:collapse; font-size:11.5px; }
+  th, td { padding:6px 5px; border-bottom:1px solid #293548; text-align:left; }
+  th { color:#94a3b8; font-size:9.5px; text-transform:uppercase; font-weight:bold; }
+  .tr { text-align:right; }
+
+  /* ============ Cursor simulado ============ */
+  #sim-cursor {
+    position:absolute; width:22px; height:22px; z-index:9999; pointer-events:none;
+    transition: left .55s cubic-bezier(.4,0,.2,1), top .55s cubic-bezier(.4,0,.2,1), opacity .2s;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    opacity:0;
+  }
+  #sim-cursor.visible { opacity:1; }
+  #sim-cursor svg { width:100%; height:100%; }
+  .click-ripple {
+    position:absolute; width:8px; height:8px; border-radius:50%;
+    background:rgba(79,70,229,0.5); border:2px solid #818cf8;
+    transform:translate(-50%,-50%) scale(0); pointer-events:none; z-index:9998;
+    animation: ripple .5s ease-out forwards;
+  }
+  @keyframes ripple { 0%{ transform:translate(-50%,-50%) scale(0); opacity:1;} 100%{ transform:translate(-50%,-50%) scale(3.2); opacity:0;} }
+
+  .sim-highlight { outline:2px solid #4f46e5 !important; outline-offset:2px; border-radius:4px; }
+  .caret-blink::after {
+    content:'|'; display:inline-block; color:#4f46e5; font-weight:bold; animation: blink 1s step-start infinite;
+    margin-left:1px;
+  }
+  @keyframes blink { 50% { opacity:0; } }
+
+  /* ============ Controles del tutorial ============ */
+  .controls {
+    width:100%; max-width:1180px; background:#1e293b; border:1px solid #334155; border-radius:10px;
+    padding:12px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  }
+  .controls .scene-label { font-size:12px; color:#94a3b8; flex:1; min-width:180px; }
+  .controls .scene-label strong { color:#e2e8f0; }
+  .ctl-btn {
+    background:#334155; color:#e2e8f0; border:none; border-radius:6px; padding:8px 14px;
+    font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap;
+  }
+  .ctl-btn:hover { background:#475569; }
+  .ctl-btn.primary { background:#4f46e5; }
+  .ctl-btn.primary:hover { background:#4338ca; }
+  .ctl-btn:disabled { opacity:.4; cursor:default; }
+
+  .scene-chips { display:flex; gap:6px; flex-wrap:wrap; width:100%; max-width:1180px; justify-content:center; }
+  .chip {
+    background:#1e293b; border:1px solid #334155; color:#94a3b8; border-radius:20px;
+    padding:6px 12px; font-size:11px; cursor:pointer; white-space:nowrap;
+  }
+  .chip:hover { border-color:#4f46e5; color:#e2e8f0; }
+  .chip.activo { background:#4f46e5; border-color:#4f46e5; color:white; }
+
+  .progress-bar { width:100%; max-width:1180px; height:4px; background:#1e293b; border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; background:#4f46e5; width:0%; transition:width .3s linear; }
+
+  .toast-sim {
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    background:#1e293b; color:#f1f5f9; padding:8px 16px; border-radius:8px; font-size:11.5px;
+    font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,0.4); z-index:50; opacity:0; transition:opacity .25s;
+    border:1px solid #334155;
+  }
+  .toast-sim.visible { opacity:1; }
+
+  footer.credit { font-size:11px; color:#475569; text-align:center; padding-top:6px; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-title">
+    <h1>💰 Control Financiero — Demo</h1>
+    <p>Tutorial animado: mirá cómo se usa la app, paso a paso, sin tocar nada. Podés reproducirlo entero o saltar a una escena puntual.</p>
+  </div>
+
+  <div class="browser-frame">
+    <div class="browser-chrome">
+      <div class="browser-dots"><span></span><span></span><span></span></div>
+      <div class="browser-url"><span class="lock">🔒</span> eduardoguillermo.github.io/demo-finanzas-raul/</div>
+    </div>
+    <div class="app-viewport" id="app-viewport">
+      <div class="app-inner" id="app-inner">
+
+        <div class="app-tabsbar" id="app-tabsbar">
+          <div class="app-tab activo" id="tab-mesactual">📊 Mes Actual</div>
+          <div class="app-tab" id="tab-movimientos">🏦 Movimientos</div>
+          <div class="app-tab" id="tab-presupuesto">🎯 Presupuesto</div>
+          <div class="app-tab" id="tab-dolares">💵 Dólares</div>
+          <div class="app-tab" id="tab-reportes">📈 Reportes</div>
+          <div class="app-tab" id="tab-anual">📅 Anual</div>
+          <div class="app-tab-spacer"></div>
+          <div class="app-tab app-tab-salir" id="btn-mas" style="background:#475569;">⋯ Más</div>
+          <div class="app-tab app-tab-salir" id="btn-salir" style="background:#334155;">🚪 Salir</div>
+        </div>
+
+        <div class="app-body" id="app-body">
+
+          <!-- ESCENA 1: MES ACTUAL — arranque vacío -->
+          <div class="scene" id="scene-1" style="display:block;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <div style="font-size:15px;font-weight:bold;">Gestión Financiera y Control de Gastos <span style="font-size:11px;color:#4f46e5;">v1.0.0</span></div>
+              <div style="display:flex;gap:6px;">
+                <div class="btn" style="background:#4f46e5;color:white;font-size:11px;padding:6px 11px;">🔄 Abrir Nuevo Mes</div>
+                <div class="btn" style="background:#475569;color:white;font-size:11px;padding:6px 11px;">⋯ Más</div>
+              </div>
+            </div>
+            <div class="grid-dashboard">
+              <div class="card-bal" style="border-left:4px solid #0284c7;">
+                <h4>Efectivo / Banco Disponible</h4>
+                <p style="color:#0284c7;">$ 0</p>
+              </div>
+              <div class="card-bal" style="border-left:4px solid #10b981;">
+                <h4>Fijos Pendientes</h4>
+                <p style="color:#10b981;">$ 0</p>
+              </div>
+              <div class="card-bal" style="border-left:4px solid #f59e0b;">
+                <h4>Saldo Proyectado</h4>
+                <p style="color:#f59e0b;">$ 0</p>
+              </div>
+              <div class="card-bal" style="border-left:4px solid #a855f7;">
+                <h4>Total Deuda Tarjetas</h4>
+                <p style="color:#a855f7;">$ 0</p>
+              </div>
+              <div class="card-bal" style="border-left:4px solid #6366f1;">
+                <h4>Presupuesto Mes</h4>
+                <div style="margin-top:6px;font-size:10.5px;color:#94a3b8;">configurá límites en Rubros</div>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:#94a3b8;margin-top:8px;">💡 Así arranca la app la primera vez: todo en cero. Vamos a cargarla paso a paso.</div>
+          </div>
+
+          <!-- ESCENA 2: ALTA DE CUENTAS BANCARIAS -->
+          <div class="scene" id="scene-2" style="display:none;">
+            <div class="panel panel-bancos" style="border-top:4px solid #0284c7;max-width:520px;position:relative;">
+              <div class="panel-title">🏦 Cuentas Bancarias / Efectivo</div>
+              <button class="btn" id="s2-btn-ingreso" style="display:flex;align-items:center;justify-content:center;gap:6px;width:100%;background:#0d9488;border:none;color:#fff;border-radius:6px;padding:9px;font-size:12px;font-weight:600;margin-bottom:10px;">💰 Ingresar fondos</button>
+              <div class="form-row">
+                <div><label>Nombre</label><input type="text" id="s2-nombre" placeholder="Ej. Galicia, MercadoPago"></div>
+                <div><label>Saldo ($)</label><input type="text" id="s2-saldo" placeholder="0"></div>
+              </div>
+              <button class="btn btn-add" id="s2-btn-agregar">Añadir Cuenta</button>
+              <table style="margin-top:14px;">
+                <thead><tr><th>Cuenta</th><th class="tr">Saldo ($)</th><th style="width:56px;text-align:center;">Auto⬇</th><th style="width:44px;"></th></tr></thead>
+                <tbody id="s2-tabla-bancos"></tbody>
+              </table>
+              <div style="font-size:10.5px;color:#94a3b8;margin-top:10px;">💡 El tilde <b>Auto⬇</b> marca la cuenta como "líquida": si está tildado, los gastos y pagos que uses con esa cuenta le descuentan el saldo automáticamente. Sin el tilde, el saldo no se mueve solo.</div>
+
+              <!-- Modal Ingresar Fondos (claro) -->
+              <div class="panel" id="s2-modal-ingreso" style="display:none;position:absolute;top:40px;left:0;right:0;background:white;color:#1e293b;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+                <div style="font-weight:bold;font-size:13px;color:#166534;margin-bottom:10px;">💰 Ingresar Fondos</div>
+                <div style="font-size:10.5px;color:#64748b;margin-bottom:4px;">Cuenta destino</div>
+                <select id="s2-ing-cuenta" style="width:100%;margin-bottom:8px;"><option>🏦 Cuenta Sueldo</option></select>
+                <div style="font-size:10.5px;color:#64748b;margin-bottom:4px;">Monto ($)</div>
+                <input type="text" id="s2-ing-monto" placeholder="0" style="margin-bottom:8px;">
+                <div style="font-size:10.5px;color:#64748b;margin-bottom:4px;">Descripción</div>
+                <input type="text" id="s2-ing-desc" placeholder="Ej. Sueldo, Cobro cliente..." style="margin-bottom:12px;">
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                  <span style="font-size:11px;color:#64748b;">Cancelar</span>
+                  <span id="s2-ing-confirmar" style="font-size:11px;font-weight:bold;color:#0284c7;">✓ Confirmar</span>
+                </div>
+              </div>
+
+              <!-- Modal Editar Saldo (claro) -->
+              <div class="panel" id="s2-modal-editar" style="display:none;position:absolute;top:40px;left:0;right:0;background:white;color:#1e293b;z-index:30;box-shadow:0 8px 30px rgba(0,0,0,0.4);">
+                <div style="font-weight:bold;font-size:13px;margin-bottom:10px;">✏️ Editar saldo</div>
+                <div style="font-size:10.5px;color:#64748b;">Cuenta</div>
+                <div id="s2-eds-nombre" style="font-weight:bold;font-size:12px;margin-bottom:8px;">Cuenta Sueldo</div>
+                <div style="font-size:10.5px;color:#64748b;margin-bottom:4px;">Nuevo saldo ($)</div>
+                <input type="text" id="s2-eds-saldo" style="margin-bottom:12px;">
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                  <span style="font-size:11px;color:#64748b;">Cancelar</span>
+                  <span id="s2-eds-confirmar" style="font-size:11px;font-weight:bold;color:#0d9488;">✓ Guardar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ESCENA 3: CREAR RUBROS DE GASTO -->
+          <div class="scene" id="scene-3" style="display:none;">
+            <div class="panel panel-rubros" style="border-top:4px solid #64748b;max-width:480px;">
+              <div class="panel-title">⚙️ Rubros de Gasto Corriente</div>
+              <div style="font-size:10.5px;color:#94a3b8;margin-bottom:10px;">Los rubros clasifican tanto gastos fijos (servicios) como corrientes (caja diaria).</div>
+              <div class="form-row" style="grid-template-columns:2fr 1fr;">
+                <input type="text" id="s3-rubro-nombre" placeholder="Ej. Alquiler y Expensas">
+                <button class="btn" id="s3-btn-rubro" style="background:#64748b;color:white;">Crear Rubro</button>
+              </div>
+              <div id="s3-rubros-lista" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;">
+                <div style="background:#334155;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#e2e8f0;">Supermercado / Almacén</div>
+                <div style="background:#334155;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#e2e8f0;">Combustible</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ESCENA 4: CONFIGURAR UN SERVICIO FIJO -->
+          <div class="scene" id="scene-4" style="display:none;">
+            <div class="panel panel-servicios" style="border-top:4px solid #4f46e5;max-width:660px;">
+              <div class="panel-title">📋 Servicios y Vencimientos Fijos</div>
+              <div class="form-row">
+                <div style="flex:2"><label>Descripción</label><input type="text" id="s4-nombre" placeholder="Ej. Luz, Internet"></div>
+                <div><label>Presupuesto ($)</label><input type="text" id="s4-presupuesto" placeholder="0"></div>
+                <div><label>Vto.</label><input type="text" id="s4-vto" placeholder="dd/mm/aaaa" style="text-align:center;"></div>
+              </div>
+              <div class="form-row">
+                <div><label>Clase</label><select id="s4-clase"><option>M — Mío</option></select></div>
+                <div><label>Rubro</label><select id="s4-rubro"><option>Alquiler y Expensas</option></select></div>
+                <div style="flex:2;"><label>Nota (opcional)</label><input type="text" id="s4-nota" placeholder="Ej. Contrato N° 1234"></div>
+              </div>
+              <button class="btn btn-add btn-indigo" id="s4-btn-agregar">Configurar Servicio Fijo</button>
+              <table style="margin-top:14px;">
+                <thead><tr><th>Servicio</th><th class="tc">Rubro</th><th class="tr">Presup.</th><th class="tc">Estado</th></tr></thead>
+                <tbody id="s4-tabla-servicios">
+                  <tr><td>Internet</td><td class="tc">—</td><td class="tr">$ 28.000</td><td class="tc"><span style="font-size:9px;font-weight:bold;padding:2px 5px;border-radius:4px;background:#fce8e6;color:#c5221f;">PENDIENTE</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ESCENA 5: PRESUPUESTO POR RUBRO (tema claro, acento violeta) -->
+          <div class="scene" id="scene-5" style="display:none;">
+            <div style="background:#f8fafc;border-radius:10px;padding:16px;max-width:620px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:3px solid #6d28d9;">
+                <div>
+                  <div style="font-size:15px;font-weight:bold;color:#1e293b;">🎯 Presupuesto Mensual</div>
+                  <div style="font-size:10.5px;color:#64748b;margin-top:2px;">Edición directa en cada rubro</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                <div style="background:white;border-radius:10px;border:1px solid #e2e8f0;border-top:3px solid #4f46e5;padding:12px 14px;width:260px;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <span style="font-size:12px;font-weight:bold;color:#4f46e5;">Alquiler y Expensas</span>
+                    <span style="font-size:9.5px;padding:2px 6px;border-radius:4px;background:#fefce8;color:#854d0e;">Fijo</span>
+                  </div>
+                  <div style="font-size:11px;color:#64748b;">📋 Fijo asignado: <b style="color:#334155;">$ 350.000</b></div>
+                </div>
+                <div style="background:white;border-radius:10px;border:1px solid #e2e8f0;border-top:3px solid #10b981;padding:12px 14px;width:260px;">
+                  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <span style="font-size:12px;font-weight:bold;color:#10b981;">Supermercado / Almacén</span>
+                    <span id="s5-badge" style="font-size:9.5px;padding:2px 6px;border-radius:4px;background:#f1f5f9;color:#94a3b8;">Sin límite</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:8px;">
+                    <span>Gastado: <b style="color:#334155;">$ 12.400</b></span>
+                    <span id="s5-libre-wrap" style="display:none;">Libre: <b id="s5-libre" style="color:#16a34a;">$ 0</b></span>
+                  </div>
+                  <div id="s5-barra-wrap" style="display:none;background:#e2e8f0;border-radius:4px;height:6px;margin-bottom:8px;"><div id="s5-barra" style="background:#10b981;height:6px;border-radius:4px;width:0%;"></div></div>
+                  <input type="text" id="s5-input" placeholder="Límite mensual ($)" style="max-width:160px;">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ESCENA 6: VINCULAR CARPETA DE BACKUP -->
+          <div class="scene" id="scene-6" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <div style="font-size:15px;font-weight:bold;">Gestión Financiera y Control de Gastos <span style="font-size:11px;color:#4f46e5;">v1.0.0</span></div>
+              <div style="display:flex;gap:6px;position:relative;">
+                <div class="btn" style="background:#4f46e5;color:white;font-size:11px;padding:6px 11px;">🔄 Abrir Nuevo Mes</div>
+                <div class="btn" id="s6-btn-mas-mes" style="background:#475569;color:white;font-size:11px;padding:6px 11px;">⋯ Más</div>
+                <div class="panel" id="s6-menu" style="display:none;position:absolute;top:32px;right:0;max-width:210px;background:#f8fafc;color:#1e293b;z-index:20;padding:4px;margin:0;">
+                  <div style="padding:7px 8px;font-size:11px;color:#64748b;">📊 Informe Semanal</div>
+                  <div style="padding:7px 8px;font-size:11px;color:#64748b;">💾 Exportar</div>
+                  <div style="padding:7px 8px;font-size:11px;color:#64748b;">📥 Importar</div>
+                  <div style="padding:7px 8px;font-size:11px;color:#64748b;">🖨️ PDF</div>
+                  <div id="s6-opt-carpeta" style="padding:7px 8px;font-size:11px;font-weight:bold;color:#0f766e;border-top:1px solid #e2e8f0;">📂 Carpeta local</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel" id="s6-dialog" style="display:none;max-width:320px;background:#f1f5f9;color:#1e293b;">
+              <div style="font-size:12px;font-weight:bold;margin-bottom:10px;color:#334155;">📁 Elegir carpeta</div>
+              <div style="background:white;border:1px solid #cbd5e1;border-radius:4px;padding:8px;font-size:11px;margin-bottom:10px;color:#334155;">
+                📂 Documentos / Backups Finanzas
+              </div>
+              <div style="display:flex;gap:12px;justify-content:flex-end;">
+                <span style="font-size:11px;color:#64748b;">Cancelar</span>
+                <span style="font-size:11px;font-weight:bold;color:#0f766e;" id="s6-btn-seleccionar">Seleccionar</span>
+              </div>
+            </div>
+            <div id="s6-status" style="display:none;font-size:10px;color:#34d399;font-weight:700;margin-bottom:10px;">📁 Backups Finanzas</div>
+            <div class="panel" id="s6-salida" style="display:none;max-width:320px;background:#f1f5f9;color:#1e293b;">
+              <div style="font-weight:bold;font-size:12px;margin-bottom:8px;color:#334155;">📦 Backup al salir</div>
+              <div style="font-size:11.5px;line-height:1.9;color:#334155;">
+                ✅ Snapshot local: guardado<br>
+                ✅ Carpeta local: guardado
+              </div>
+            </div>
+          </div>
+
+          <!-- ESCENA 7: CUENTAS EN DÓLARES -->
+          <div class="scene" id="scene-7" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;border-bottom:2px solid #16a34a;padding-bottom:10px;">
+              <div style="font-size:15px;font-weight:bold;">💵 Gestión en Dólares</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div style="font-size:11px;font-weight:bold;color:#4ade80;padding:6px 10px;background:#0f2a1a;border-radius:6px;border:1px solid #16a34a;">USD Oficial: $ 1.245</div>
+                <div class="btn" style="background:#16a34a;color:white;font-size:11px;padding:6px 10px;">🔄 Actualizar TC</div>
+              </div>
+            </div>
+            <div class="panel" style="border-top:4px solid #16a34a;max-width:480px;">
+              <div class="panel-title">🏦 Cuentas en USD</div>
+              <div class="form-row">
+                <div><label>Nombre</label><input type="text" id="s7-nombre" placeholder="Ej. Billetera USD"></div>
+                <div><label>Saldo (USD)</label><input type="text" id="s7-saldo" placeholder="0"></div>
+              </div>
+              <button class="btn btn-add" id="s7-btn-agregar" style="background:#16a34a;border:none;">Añadir Cuenta USD</button>
+              <table style="margin-top:14px;">
+                <thead><tr><th>Cuenta</th><th class="tr">Saldo (USD)</th><th class="tr">En pesos</th></tr></thead>
+                <tbody id="s7-tabla"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div id="sim-cursor">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M4 2L4 20L9 15.5L12.5 22L15 20.5L11.5 14L18 14L4 2Z" fill="#f1f5f9" stroke="#0f172a" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="toast-sim" id="toast-sim"></div>
+    </div>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="controls">
+    <button class="ctl-btn primary" id="btn-play">▶ Reproducir todo</button>
+    <button class="ctl-btn" id="btn-pause" disabled>⏸ Pausar</button>
+    <button class="ctl-btn" id="btn-restart">⟲ Reiniciar escena</button>
+    <div class="scene-label">Escena <strong id="scene-num">1</strong> de <strong id="scene-total">1</strong>: <span id="scene-name">—</span></div>
+    <select id="speed-select" class="ctl-btn" style="cursor:pointer;">
+      <option value="1.6">Lento</option>
+      <option value="1" selected>Normal</option>
+      <option value="0.55">Rápido</option>
+    </select>
+  </div>
+
+  <div class="scene-chips" id="scene-chips"></div>
+
+  <footer class="credit">Development by Guille — tutorial generado para la versión demo de Control Financiero</footer>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   MOTOR DE ANIMACIÓN — cursor, click, tipeo, toasts
+   ════════════════════════════════════════════════════ */
+const viewport = document.getElementById('app-viewport');
+const cursor = document.getElementById('sim-cursor');
+const appInner = document.getElementById('app-inner');
+const toastEl = document.getElementById('toast-sim');
+
+let SPEED = 1; // multiplicador global (menor = más rápido)
+document.getElementById('speed-select').addEventListener('change', e => { SPEED = parseFloat(e.target.value); });
+
+function wait(ms) {
+  return new Promise(res => setTimeout(res, ms * SPEED));
+}
+
+function vpRect() { return viewport.getBoundingClientRect(); }
+
+function cursorShow() { cursor.classList.add('visible'); }
+function cursorHide() { cursor.classList.remove('visible'); }
+
+function setCursorPos(x, y) {
+  cursor.style.left = (x - 2) + 'px';
+  cursor.style.top = (y - 2) + 'px';
+}
+
+async function moveCursorTo(el, opts) {
+  opts = opts || {};
+  const r = el.getBoundingClientRect();
+  const vr = vpRect();
+  const targetX = (r.left - vr.left) + (opts.offsetX !== undefined ? opts.offsetX : r.width/2);
+  const targetY = (r.top - vr.top) + (opts.offsetY !== undefined ? opts.offsetY : r.height/2);
+  cursorShow();
+  setCursorPos(targetX, targetY);
+  await wait(opts.duration || 560);
+  return {x: targetX, y: targetY};
+}
+
+function ripple(x, y) {
+  const rp = document.createElement('div');
+  rp.className = 'click-ripple';
+  rp.style.left = x + 'px';
+  rp.style.top = y + 'px';
+  viewport.appendChild(rp);
+  setTimeout(() => rp.remove(), 520);
+}
+
+async function clickOn(el, opts) {
+  opts = opts || {};
+  const pos = await moveCursorTo(el, opts);
+  el.classList.add('sim-highlight');
+  ripple(pos.x, pos.y);
+  await wait(140);
+  el.classList.remove('sim-highlight');
+  if (opts.action) opts.action();
+  await wait(opts.after !== undefined ? opts.after : 300);
+}
+
+async function typeInto(el, text, opts) {
+  opts = opts || {};
+  await moveCursorTo(el, opts);
+  el.classList.add('sim-highlight');
+  el.textContent = '';
+  const charDelay = opts.charDelay !== undefined ? opts.charDelay : 38;
+  for (let i = 0; i < text.length; i++) {
+    el.textContent += text[i];
+    await wait(charDelay);
+  }
+  el.classList.remove('sim-highlight');
+  await wait(opts.after !== undefined ? opts.after : 250);
+}
+
+async function showToast(msg, dur) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('visible');
+  await wait(dur || 1400);
+  toastEl.classList.remove('visible');
+  await wait(200);
+}
+
+function fadeSwap(fromEl, toEl) {
+  if (fromEl) fromEl.style.display = 'none';
+  if (toEl) toEl.style.display = 'block';
+}
+
+async function pulseValue(el, opts) {
+  opts = opts || {};
+  el.style.transition = 'color .15s';
+  const orig = el.style.color;
+  el.style.color = opts.color || '#10b981';
+  await wait(280);
+  el.style.color = orig;
+}
+
+/* Espera cancelable (para poder pausar / cambiar de escena a mitad de camino) */
+let PAUSED = false;
+let RUN_TOKEN = 0; // se incrementa cada vez que se interrumpe una escena en curso
+async function checkpoint(myToken) {
+  while (PAUSED) { await wait(120); }
+  if (myToken !== RUN_TOKEN) throw new Error('__STOPPED__');
+}
+
+/* ════════════════════════════════════════════════════
+   ESCENAS — cada una es un guión async independiente
+   ════════════════════════════════════════════════════ */
+const TAB_COLORS = {
+  'tab-mesactual':   null, // usa el estilo .activo por defecto (fondo oscuro)
+  'tab-movimientos': 'background:#f0f9ff;color:#0284c7;border-color:#7dd3fc;',
+  'tab-presupuesto': 'background:#f5f3ff;color:#6d28d9;border-color:#c4b5fd;',
+  'tab-dolares':     'background:#f0fdf4;color:#15803d;border-color:#86efac;',
+  'tab-reportes':    'background:#f0fdf4;color:#166534;border-color:#86efac;',
+  'tab-anual':       'background:#eff6ff;color:#1d4ed8;border-color:#93c5fd;'
+};
+function activarTab(id) {
+  document.querySelectorAll('.app-tab').forEach(t => { t.classList.remove('activo'); t.removeAttribute('style'); if (t.id === 'btn-mas') t.style.background = '#475569'; if (t.id === 'btn-salir') t.style.background = '#334155'; });
+  const t = document.getElementById(id);
+  if (t) {
+    t.classList.add('activo');
+    const custom = TAB_COLORS[id];
+    if (custom) t.style.cssText = custom + 'border-width:1px;border-style:solid;border-bottom:none;';
+  }
+}
+function mostrarEscena(n) {
+  document.querySelectorAll('.scene').forEach(s => s.style.display = 'none');
+  const s = document.getElementById('scene-' + n);
+  if (s) s.style.display = 'block';
+  cursorHide();
+}
+
+const escenas = [
+  {
+    id: 1, nombre: 'Así arranca la app', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(1);
+      activarTab('tab-mesactual');
+      await checkpoint(__tok);
+      await showToast('Todo empieza en cero. Vamos a configurarla paso a paso.', 1800);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 2, nombre: 'Cuentas: alta, Auto⬇, ingresos, editar y borrar', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(2);
+      document.getElementById('s2-tabla-bancos').innerHTML = '';
+      document.getElementById('s2-nombre').value = '';
+      document.getElementById('s2-saldo').value = '';
+      document.getElementById('s2-modal-ingreso').style.display = 'none';
+      document.getElementById('s2-modal-editar').style.display = 'none';
+      await checkpoint(__tok);
+
+      // 1) Alta de dos cuentas
+      await typeInto(document.getElementById('s2-nombre'), 'Cuenta Sueldo', {charDelay: 42});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s2-saldo'), '842.300', {charDelay: 50});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s2-btn-agregar'), {after: 250, action: () => {
+        const tbody = document.getElementById('s2-tabla-bancos');
+        const tr = document.createElement('tr');
+        tr.id = 's2-row-1';
+        tr.innerHTML = '<td><b>Cuenta Sueldo</b></td><td class="tr" id="s2-saldo-1">$ 842.300</td>'
+          + '<td style="text-align:center;"><input type="checkbox" id="s2-chk-1"></td>'
+          + '<td class="tc"><span id="s2-edit-1" style="cursor:default;margin-right:6px;">✏️</span><span id="s2-del-1" style="cursor:default;color:#ef4444;">✕</span></td>';
+        tbody.appendChild(tr);
+        document.getElementById('s2-nombre').value = '';
+        document.getElementById('s2-saldo').value = '';
+      }});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s2-nombre'), 'Efectivo', {charDelay: 42});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s2-saldo'), '35.000', {charDelay: 50});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s2-btn-agregar'), {after: 250, action: () => {
+        const tbody = document.getElementById('s2-tabla-bancos');
+        const tr = document.createElement('tr');
+        tr.id = 's2-row-2';
+        tr.innerHTML = '<td><b>Efectivo</b></td><td class="tr" id="s2-saldo-2">$ 35.000</td>'
+          + '<td style="text-align:center;"><input type="checkbox" id="s2-chk-2"></td>'
+          + '<td class="tc"><span id="s2-edit-2" style="cursor:default;margin-right:6px;">✏️</span><span id="s2-del-2" style="cursor:default;color:#ef4444;">✕</span></td>';
+        tbody.appendChild(tr);
+        document.getElementById('s2-nombre').value = '';
+        document.getElementById('s2-saldo').value = '';
+      }});
+      await checkpoint(__tok);
+
+      // 2) Tildar Auto⬇ en Cuenta Sueldo
+      await clickOn(document.getElementById('s2-chk-1'), {after: 200, action: () => {
+        document.getElementById('s2-chk-1').checked = true;
+      }});
+      await showToast('☑️ Auto⬇ tildado: los gastos pagados con esta cuenta ahora le descuentan el saldo solos', 2200);
+      await checkpoint(__tok);
+
+      // 3) Ingresar fondos
+      await clickOn(document.getElementById('s2-btn-ingreso'), {after: 200, action: () => {
+        document.getElementById('s2-ing-monto').value = '';
+        document.getElementById('s2-ing-desc').value = '';
+        document.getElementById('s2-modal-ingreso').style.display = 'block';
+      }});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s2-ing-monto'), '50.000', {charDelay: 55});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s2-ing-desc'), 'Cobro freelance', {charDelay: 40});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s2-ing-confirmar'), {after: 250, action: () => {
+        document.getElementById('s2-modal-ingreso').style.display = 'none';
+        document.getElementById('s2-saldo-1').textContent = '$ 892.300';
+      }});
+      await pulseValue(document.getElementById('s2-saldo-1'));
+      await showToast('💰 El ingreso queda registrado en el historial y suma directo al saldo', 1900);
+      await checkpoint(__tok);
+
+      // 4) Editar saldo con el lápiz
+      await clickOn(document.getElementById('s2-edit-1'), {after: 200, action: () => {
+        document.getElementById('s2-eds-nombre').textContent = 'Cuenta Sueldo';
+        document.getElementById('s2-eds-saldo').value = '892300';
+        document.getElementById('s2-modal-editar').style.display = 'block';
+      }});
+      await checkpoint(__tok);
+      const edsInput = document.getElementById('s2-eds-saldo');
+      await moveCursorTo(edsInput, {duration: 450});
+      edsInput.classList.add('sim-highlight');
+      edsInput.value = '';
+      const nuevoSaldo = '900000';
+      for (let i = 0; i < nuevoSaldo.length; i++) { edsInput.value += nuevoSaldo[i]; await wait(55); }
+      edsInput.classList.remove('sim-highlight');
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s2-eds-confirmar'), {after: 250, action: () => {
+        document.getElementById('s2-modal-editar').style.display = 'none';
+        document.getElementById('s2-saldo-1').textContent = '$ 900.000';
+      }});
+      await pulseValue(document.getElementById('s2-saldo-1'));
+      await showToast('✏️ El lápiz corrige el saldo a mano, sin pasar por un movimiento', 1800);
+      await checkpoint(__tok);
+
+      // 5) Borrar una cuenta
+      await clickOn(document.getElementById('s2-del-2'), {after: 250, action: () => {
+        const row = document.getElementById('s2-row-2');
+        if (row) row.remove();
+      }});
+      await showToast('🗑️ Borrar pide confirmación en la app real — es una acción irreversible', 1900);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 3, nombre: 'Rubros de gasto (fijos y comunes)', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(3);
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s3-rubro-nombre'), 'Alquiler y Expensas', {charDelay: 40});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s3-btn-rubro'), {after: 200, action: () => {
+        const lista = document.getElementById('s3-rubros-lista');
+        const b = document.createElement('div');
+        b.style.cssText = 'background:#334155;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:bold;color:#e2e8f0;';
+        b.textContent = 'Alquiler y Expensas';
+        lista.appendChild(b);
+        document.getElementById('s3-rubro-nombre').value = '';
+      }});
+      await showToast('✅ El mismo rubro sirve para clasificar servicios fijos y gastos del día a día', 1900);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 4, nombre: 'Configurar un servicio fijo', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(4);
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s4-nombre'), 'Alquiler', {charDelay: 45});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s4-presupuesto'), '350.000', {charDelay: 50});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s4-vto'), '10/09/2026', {charDelay: 45});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s4-rubro'), {after: 150});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s4-btn-agregar'), {after: 250, action: () => {
+        const tbody = document.getElementById('s4-tabla-servicios');
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>Alquiler</td><td class="tc">Alquiler y Expensas</td><td class="tr">$ 350.000</td><td class="tc"><span style="font-size:9px;font-weight:bold;padding:2px 5px;border-radius:4px;background:#fce8e6;color:#c5221f;">PENDIENTE</span></td>';
+        tbody.insertBefore(tr, tbody.firstChild);
+        document.getElementById('s4-nombre').value = '';
+        document.getElementById('s4-presupuesto').value = '';
+        document.getElementById('s4-vto').value = '';
+      }});
+      await showToast('✅ Los servicios fijos se marcan pagados más adelante, editando "Pagado" en la fila', 1900);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 5, nombre: 'Presupuesto por rubro', tab: 'tab-presupuesto',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(5);
+      activarTab('tab-presupuesto');
+      document.getElementById('s5-libre-wrap').style.display = 'none';
+      document.getElementById('s5-barra-wrap').style.display = 'none';
+      document.getElementById('s5-badge').textContent = 'Sin límite';
+      document.getElementById('s5-badge').style.background = '#f1f5f9';
+      document.getElementById('s5-badge').style.color = '#94a3b8';
+      document.getElementById('s5-input').value = '';
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('tab-presupuesto'), {after: 200});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s5-input'), '80.000', {charDelay: 55});
+      await checkpoint(__tok);
+      document.getElementById('s5-libre-wrap').style.display = 'inline';
+      document.getElementById('s5-libre').textContent = '$ 67.600';
+      document.getElementById('s5-barra-wrap').style.display = 'block';
+      document.getElementById('s5-barra').style.width = '16%';
+      document.getElementById('s5-badge').textContent = '16%';
+      document.getElementById('s5-badge').style.background = '#f0fdf4';
+      document.getElementById('s5-badge').style.color = '#15803d';
+      await showToast('El límite se compara contra lo gastado real del mes en ese rubro', 1700);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 6, nombre: 'Vincular carpeta de backup', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(6);
+      activarTab('tab-mesactual');
+      document.getElementById('s6-dialog').style.display = 'none';
+      document.getElementById('s6-salida').style.display = 'none';
+      document.getElementById('s6-status').style.display = 'none';
+      document.getElementById('s6-menu').style.display = 'none';
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s6-btn-mas-mes'), {after: 250, action: () => {
+        document.getElementById('s6-menu').style.display = 'block';
+      }});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s6-opt-carpeta'), {after: 250, action: () => {
+        document.getElementById('s6-menu').style.display = 'none';
+        document.getElementById('s6-dialog').style.display = 'block';
+      }});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s6-btn-seleccionar'), {after: 250, action: () => {
+        document.getElementById('s6-dialog').style.display = 'none';
+        document.getElementById('s6-status').style.display = 'block';
+      }});
+      await showToast('📂 Carpeta vinculada — desde ahora hace backup ahí en cada guardado', 1700);
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('btn-salir'), {after: 250, action: () => {
+        document.getElementById('s6-salida').style.display = 'block';
+      }});
+      await showToast('🚪 Snapshot + backup a carpeta local, todo antes de cerrar', 1800);
+      await checkpoint(__tok);
+    }
+  },
+  {
+    id: 7, nombre: 'Cuentas en Dólares', tab: 'tab-dolares',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(7);
+      activarTab('tab-dolares');
+      document.getElementById('s7-tabla').innerHTML = '';
+      document.getElementById('s7-nombre').value = '';
+      document.getElementById('s7-saldo').value = '';
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('tab-dolares'), {after: 200});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s7-nombre'), 'Billetera USD', {charDelay: 40});
+      await checkpoint(__tok);
+      await typeInto(document.getElementById('s7-saldo'), '820', {charDelay: 55});
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s7-btn-agregar'), {after: 200, action: () => {
+        const tbody = document.getElementById('s7-tabla');
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td>Billetera USD</td><td class="tr">USD 820,00</td><td class="tr">≈ $ 1.021.100</td>';
+        tbody.appendChild(tr);
+        document.getElementById('s7-nombre').value = '';
+        document.getElementById('s7-saldo').value = '';
+      }});
+      await showToast('✅ Listo — la app maneja pesos y dólares en pestañas separadas', 1700);
+      await checkpoint(__tok);
+    }
+  }
+];
+
+/* ════════════════════════════════════════════════════
+   ORQUESTACIÓN — chips, play/pause/restart, progreso
+   ════════════════════════════════════════════════════ */
+let currentSceneIdx = 0;
+let isPlayingAll = false;
+
+const chipsWrap = document.getElementById('scene-chips');
+escenas.forEach((esc, i) => {
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.textContent = (i+1) + '. ' + esc.nombre;
+  chip.dataset.idx = i;
+  chip.addEventListener('click', () => {
+    isPlayingAll = false;
+    document.getElementById('btn-play').disabled = false;
+    document.getElementById('btn-play').textContent = '▶ Reproducir todo';
+    document.getElementById('btn-pause').disabled = true;
+    selectScene(i, true);
+  });
+  chipsWrap.appendChild(chip);
+});
+
+function updateChips() {
+  Array.from(chipsWrap.children).forEach((c, i) => c.classList.toggle('activo', i === currentSceneIdx));
+}
+function updateSceneLabel() {
+  document.getElementById('scene-num').textContent = currentSceneIdx + 1;
+  document.getElementById('scene-total').textContent = escenas.length;
+  document.getElementById('scene-name').textContent = escenas[currentSceneIdx].nombre;
+}
+function updateProgress() {
+  const pct = ((currentSceneIdx) / escenas.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+async function selectScene(i, autoplayThis) {
+  RUN_TOKEN++; // invalida cualquier escena en curso (sus checkpoints van a tirar __STOPPED__)
+  PAUSED = false;
+  document.getElementById('btn-pause').textContent = '⏸ Pausar';
+  currentSceneIdx = i;
+  updateChips(); updateSceneLabel(); updateProgress();
+  activarTab(escenas[i].tab);
+  mostrarEscena(escenas[i].id);
+  cursorHide();
+  if (autoplayThis) {
+    try { await escenas[i].run(); } catch(e) { if (e.message !== '__STOPPED__') console.error(e); }
+  }
+}
+
+async function playAll() {
+  isPlayingAll = true;
+  document.getElementById('btn-play').disabled = true;
+  document.getElementById('btn-pause').disabled = false;
+  for (let i = currentSceneIdx; i < escenas.length; i++) {
+    currentSceneIdx = i;
+    updateChips(); updateSceneLabel(); updateProgress();
+    activarTab(escenas[i].tab);
+    try {
+      await escenas[i].run();
+    } catch(e) {
+      if (e.message === '__STOPPED__') { isPlayingAll = false; return; }
+      console.error(e);
+    }
+    if (!isPlayingAll) return;
+    await wait(500);
+  }
+  updateProgress();
+  document.getElementById('progress-fill').style.width = '100%';
+  isPlayingAll = false;
+  document.getElementById('btn-play').disabled = false;
+  document.getElementById('btn-play').textContent = '▶ Reproducir de nuevo';
+  document.getElementById('btn-pause').disabled = true;
+  currentSceneIdx = 0;
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (PAUSED) { PAUSED = false; document.getElementById('btn-pause').textContent = '⏸ Pausar'; return; }
+  playAll();
+});
+document.getElementById('btn-pause').addEventListener('click', () => {
+  PAUSED = !PAUSED;
+  document.getElementById('btn-pause').textContent = PAUSED ? '▶ Continuar' : '⏸ Pausar';
+});
+document.getElementById('btn-restart').addEventListener('click', () => {
+  const seguirTodo = isPlayingAll;
+  isPlayingAll = false;
+  selectScene(currentSceneIdx, true).then(() => { if (seguirTodo) playAll(); });
+});
+
+/* Estado inicial */
+updateChips(); updateSceneLabel(); updateProgress();
+mostrarEscena(1);
+</script>
+
+</body>
+</html>
