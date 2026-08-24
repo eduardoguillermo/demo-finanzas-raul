@@ -2,20 +2,20 @@
 //  ESTADO GLOBAL
 // ═══════════════════════════════════════════
 const K = {
-    rubros:'f_r_v2_2', bancos:'f_bancos_v2_4', tarjetas:'f_tarjetas_v2_4',
-    servicios:'f_servicios_v2_4', corrientes:'f_corrientes_v2_4',
-    transferencias:'f_transferencias_v3', cuotas:'f_cuotas_v3', historico:'f_historico_v3',
-    transferenciasUSD:'f_transferenciasUSD_v1',
-    cuentasUSD:'f_cuentasUSD_v3', tarjetasUSD:'f_tarjetasUSD_v3',
-    serviciosUSD:'f_serviciosUSD_v3', corrientesUSD:'f_corrientesUSD_v3',
-    tipoCambio:'f_tipoCambio_v3',
-    comprasUSD:'f_comprasUSD_v1',
-    instrumentos:'f_instrumentos_v1',
-    acciones:'f_acciones_v1',
-    ingresos:'f_ingresos_v1',
-    ingresosPresup:'f_ingresosPresup_v1',
-    pagosTarjeta:'f_pagosTarjeta_v1',
-    pagosTarjetaUSD:'f_pagosTarjetaUSD_v1'
+    rubros:'demo_r_v2_2', bancos:'demo_bancos_v2_4', tarjetas:'demo_tarjetas_v2_4',
+    servicios:'demo_servicios_v2_4', corrientes:'demo_corrientes_v2_4',
+    transferencias:'demo_transferencias_v3', cuotas:'demo_cuotas_v3', historico:'demo_historico_v3',
+    transferenciasUSD:'demo_transferenciasUSD_v1',
+    cuentasUSD:'demo_cuentasUSD_v3', tarjetasUSD:'demo_tarjetasUSD_v3',
+    serviciosUSD:'demo_serviciosUSD_v3', corrientesUSD:'demo_corrientesUSD_v3',
+    tipoCambio:'demo_tipoCambio_v3',
+    comprasUSD:'demo_comprasUSD_v1',
+    instrumentos:'demo_instrumentos_v1',
+    acciones:'demo_acciones_v1',
+    ingresos:'demo_ingresos_v1',
+    ingresosPresup:'demo_ingresosPresup_v1',
+    pagosTarjeta:'demo_pagosTarjeta_v1',
+    pagosTarjetaUSD:'demo_pagosTarjetaUSD_v1'
 };
 let listaRubros        = leer(K.rubros)        || ["Carnicería / Verdulería","Supermercado / Almacén","Gastos Auto / Combustible"];
 let listaBancos        = leer(K.bancos)        || [];
@@ -36,9 +36,9 @@ let listaIngresos      = leer(K.ingresos)      || [];
 let listaIngresosPresup = leer(K.ingresosPresup) || [];
 let listaPagosTarjeta  = leer(K.pagosTarjeta)  || [];
 let listaPagosTarjetaUSD = leer(K.pagosTarjetaUSD) || [];
-let listaPresupRubros    = leer('f_presup_rubros_v1')    || {};
-let listaPresupRubrosUSD = leer('f_presup_rubros_usd_v1') || {};
-let listaRubrosUSD       = leer('f_rubros_usd_v1')        || ['Electrónica','Servicios Online','Transferencias','Varios USD'];
+let listaPresupRubros    = leer('demo_presup_rubros_v1')    || {};
+let listaPresupRubrosUSD = leer('demo_presup_rubros_usd_v1') || {};
+let listaRubrosUSD       = leer('demo_rubros_usd_v1')        || ['Electrónica','Servicios Online','Transferencias','Varios USD'];
 let tabActivo = null;
 let movBancoSelId = null; // cuenta bancaria seleccionada en la pestaña Movimientos
 let movMesSelYM = null; // mes (YYYY-MM) seleccionado en la pestaña Movimientos
@@ -49,7 +49,7 @@ let _syncPendiente = false;
 let _syncActivo = false;
 
 // ── Snapshots locales (backup en localStorage, igual que Gestión Docente) ──
-const CF_BKUP_KEY = 'cf_backups';
+const CF_BKUP_KEY = 'demo_cf_backups';
 const CF_BKUP_MAX = 10;
 
 function cfCargarSnapshots() {
@@ -183,9 +183,9 @@ function guardar() {
         localStorage.setItem(K.serviciosUSD,   JSON.stringify(listaServiciosUSD));
         localStorage.setItem(K.corrientesUSD,  JSON.stringify(listaCorrientesUSD));
         localStorage.setItem(K.tipoCambio,     JSON.stringify(tipoCambio));
-        localStorage.setItem('f_presup_rubros_v1',     JSON.stringify(listaPresupRubros));
-        localStorage.setItem('f_presup_rubros_usd_v1', JSON.stringify(listaPresupRubrosUSD));
-        localStorage.setItem('f_rubros_usd_v1',         JSON.stringify(listaRubrosUSD));
+        localStorage.setItem('demo_presup_rubros_v1',     JSON.stringify(listaPresupRubros));
+        localStorage.setItem('demo_presup_rubros_usd_v1', JSON.stringify(listaPresupRubrosUSD));
+        localStorage.setItem('demo_rubros_usd_v1',         JSON.stringify(listaRubrosUSD));
         localStorage.setItem(K.ingresos,       JSON.stringify(listaIngresos));
         localStorage.setItem(K.ingresosPresup, JSON.stringify(listaIngresosPresup));
         localStorage.setItem(K.pagosTarjeta,   JSON.stringify(listaPagosTarjeta));
@@ -257,7 +257,7 @@ async function syncAlSalir() {
 // ═══════════════════════════════════════════════════════════════
 //  CARPETA LOCAL — File System Access API + IndexedDB
 // ═══════════════════════════════════════════════════════════════
-const CF_FOLDER_DB    = 'cf-folder-db';
+const CF_FOLDER_DB    = 'demo-cf-folder-db';
 const CF_FOLDER_STORE = 'handles';
 const CF_FOLDER_KEY   = 'carpeta';
 const CF_MAX_BK       = 7;
@@ -1694,7 +1694,7 @@ function cargarDatos(res) {
     if(res.listaIngresosPresup)  listaIngresosPresup  = res.listaIngresosPresup;
     if(res.listaPagosTarjeta)    listaPagosTarjeta    = res.listaPagosTarjeta;
     if(res.listaPagosTarjetaUSD) listaPagosTarjetaUSD = res.listaPagosTarjetaUSD;
-    if(res.groqKey)            localStorage.setItem('groq_api_key', res.groqKey);
+    if(res.groqKey)            localStorage.setItem('demo_groq_api_key', res.groqKey);
 }
 function importar(event) {
     const file=event.target.files[0]; if(!file) return;
@@ -3214,12 +3214,12 @@ async function enviarConsultaAI() {
     _aiHistorial.push({ role: 'user', content: pregunta });
 
     // Verificar API key de Gemini
-    var apiKey = localStorage.getItem('groq_api_key') || '';
+    var apiKey = localStorage.getItem('demo_groq_api_key') || '';
     if(!apiKey) {
         var k = prompt('Ingres\u00e1 tu API key de Groq (se guarda solo en este dispositivo):');
         if(!k || !k.trim()) { inp.disabled=false; if(btn) btn.disabled=false; return; }
         apiKey = k.trim();
-        localStorage.setItem('groq_api_key', apiKey);
+        localStorage.setItem('demo_groq_api_key', apiKey);
     }
 
     // Armar historial para Groq (formato OpenAI compatible)
@@ -3246,7 +3246,7 @@ async function enviarConsultaAI() {
         var data = await res.json();
         if(data.error) {
             if(res.status === 401 || res.status === 403) {
-                localStorage.removeItem('groq_api_key');
+                localStorage.removeItem('demo_groq_api_key');
                 if(typing) typing.innerText = '\u26A0\uFE0F API key inv\u00e1lida. Recargá y volvé a ingresarla.';
             } else {
                 if(typing) typing.innerText = '\u26A0\uFE0F Error: ' + (data.error.message || 'desconocido');
