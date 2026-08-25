@@ -45,11 +45,12 @@
     position:relative; background:#0f172a; overflow:hidden;
     flex:1 1 auto; min-height:0;
   }
-  .app-inner { position:absolute; inset:0; overflow:auto; }
+  .app-inner { position:absolute; inset:0; overflow:hidden; display:flex; flex-direction:column; }
 
   .app-tabsbar {
     display:flex; align-items:flex-end; background:#1e293b; padding:0 16px;
     min-height:40px; border-bottom:1px solid #334155; position:relative; z-index:5;
+    flex:0 0 auto;
   }
   .app-tab {
     display:flex; align-items:center; gap:6px; padding:9px 14px 7px; font-size:11px; font-weight:bold;
@@ -59,7 +60,7 @@
   .app-tab-spacer { flex:1; }
   .app-tab-salir { background:#334155; color:white; border-radius:4px; padding:5px 10px; font-size:11px; font-weight:bold; margin:6px 0; }
 
-  .app-body { padding:16px; height: calc(100% - 40px); overflow:hidden; position:relative; }
+  .app-body { padding:16px; overflow-y:auto; overflow-x:hidden; position:relative; flex:1 1 auto; min-height:0; }
 
   .grid-dashboard { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:10px; margin-bottom:16px; }
   .card-bal { background:#1e293b; padding:12px; border-radius:8px; border:1px solid #334155; }
@@ -405,6 +406,41 @@
             </div>
           </div>
 
+          <!-- ESCENA 8: CIERRE Y APERTURA DE UN NUEVO MES -->
+          <div class="scene" id="scene-8" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+              <div style="font-size:15px;font-weight:bold;">Gestión Financiera y Control de Gastos <span style="font-size:11px;color:#4f46e5;">v1.0.0</span></div>
+              <div style="display:flex;gap:6px;">
+                <div class="btn" id="s8-btn-nuevo-mes" style="background:#4f46e5;color:white;font-size:11px;padding:6px 11px;">🔄 Abrir Nuevo Mes</div>
+                <div class="btn" style="background:#475569;color:white;font-size:11px;padding:6px 11px;">⋯ Más</div>
+                <div style="background:#334155;color:white;font-size:11px;padding:6px 11px;border-radius:4px;position:relative;">
+                  📅 Meses cerrados <span id="s8-badge-meses" style="display:none;background:rgba(255,255,255,0.25);border-radius:10px;padding:0 6px;font-size:10px;margin-left:2px;">1</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="font-size:11px;color:#94a3b8;margin-bottom:14px;">Al terminar el mes, se cierra el período actual y se abre uno nuevo — todo en un solo paso.</div>
+
+            <!-- Diálogo de confirmación (simula confirm() del navegador) -->
+            <div class="panel" id="s8-confirm" style="display:none;max-width:400px;background:#f8fafc;color:#1e293b;">
+              <div style="font-weight:bold;font-size:13px;margin-bottom:10px;">🔄 ¿Abrir nuevo período mensual?</div>
+              <div style="font-size:11.5px;line-height:1.9;color:#334155;">
+                → Se archivará "Agosto 2026"<br>
+                → Bancos/tarjetas se ajustan<br>
+                → Servicios fijos se conservan sin pagos<br>
+                → Caja diaria y transferencias se vacían
+              </div>
+              <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+                <span style="font-size:11px;color:#64748b;">Cancelar</span>
+                <span id="s8-btn-confirmar" style="font-size:11px;font-weight:bold;color:#4f46e5;">Aceptar</span>
+              </div>
+            </div>
+
+            <div id="s8-resultado" style="display:none;font-size:11.5px;color:#94a3b8;">
+              💡 El mes que cerró queda archivado en <b style="color:#e2e8f0;">📅 Meses cerrados</b>, de solo lectura — se puede consultar cuando quieras pero no editar.
+            </div>
+          </div>
+
         </div>
       </div>
       <div id="sim-cursor">
@@ -463,6 +499,9 @@ function setCursorPos(x, y) {
 
 async function moveCursorTo(el, opts) {
   opts = opts || {};
+  // Si el elemento quedó fuera del área visible (contenido más alto que el marco), lo traemos a la vista primero.
+  el.scrollIntoView({block: 'center', inline: 'nearest'});
+  await wait(30);
   const r = el.getBoundingClientRect();
   const vr = vpRect();
   const targetX = (r.left - vr.left) + (opts.offsetX !== undefined ? opts.offsetX : r.width/2);
@@ -815,6 +854,30 @@ const escenas = [
       await showToast('✅ Listo — la app maneja pesos y dólares en pestañas separadas', 2900);
       await checkpoint(__tok);
     }
+  },
+  {
+    id: 8, nombre: 'Cierre y apertura de un nuevo mes', tab: 'tab-mesactual',
+    run: async function() {
+      const __tok = ++RUN_TOKEN;
+      mostrarEscena(8);
+      activarTab('tab-mesactual');
+      document.getElementById('s8-confirm').style.display = 'none';
+      document.getElementById('s8-resultado').style.display = 'none';
+      document.getElementById('s8-badge-meses').style.display = 'none';
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s8-btn-nuevo-mes'), {after: 300, action: () => {
+        document.getElementById('s8-confirm').style.display = 'block';
+      }});
+      await showToast('Antes de cerrar, la app siempre pregunta y explica qué va a pasar', 2600);
+      await checkpoint(__tok);
+      await clickOn(document.getElementById('s8-btn-confirmar'), {after: 350, action: () => {
+        document.getElementById('s8-confirm').style.display = 'none';
+        document.getElementById('s8-badge-meses').style.display = 'inline';
+        document.getElementById('s8-resultado').style.display = 'block';
+      }});
+      await showToast('📦 Mes archivado y nuevo período abierto: saldos ajustados, fijos sin pagos, caja diaria vacía', 3600);
+      await checkpoint(__tok);
+    }
   }
 ];
 
@@ -842,6 +905,8 @@ escenas.forEach((esc, i) => {
 
 function updateChips() {
   Array.from(chipsWrap.children).forEach((c, i) => c.classList.toggle('activo', i === currentSceneIdx));
+  const activo = chipsWrap.children[currentSceneIdx];
+  if (activo) activo.scrollIntoView({block: 'nearest', inline: 'center', behavior: 'smooth'});
 }
 function updateSceneLabel() {
   document.getElementById('scene-num').textContent = currentSceneIdx + 1;
