@@ -144,12 +144,21 @@
   .progress-fill { height:100%; background:#4f46e5; width:0%; transition:width .3s linear; }
 
   .toast-sim {
-    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
-    background:#1e293b; color:#f1f5f9; padding:8px 16px; border-radius:8px; font-size:11.5px;
-    font-weight:600; box-shadow:0 4px 20px rgba(0,0,0,0.4); z-index:50; opacity:0; transition:opacity .25s;
-    border:1px solid #334155;
+    position:absolute; top:50%; right:16px; width:250px;
+    background:#1e1b4b; color:#f1f5f9; padding:16px 18px; border-radius:12px; font-size:14px;
+    font-weight:600; line-height:1.45; box-shadow:0 10px 40px rgba(0,0,0,0.55); z-index:50;
+    border-left:4px solid #818cf8; border-top:1px solid #4338ca; border-right:1px solid #4338ca; border-bottom:1px solid #4338ca;
+    transition: transform .4s cubic-bezier(.4,0,.2,1), opacity .3s; opacity:0;
+    transform: translate(120%, -50%);
   }
-  .toast-sim.visible { opacity:1; }
+  .toast-sim::before {
+    content:'💬'; display:block; font-size:18px; margin-bottom:6px;
+  }
+  .toast-sim.visible { transform: translate(0, -50%); opacity:1; }
+  @media (max-width: 720px) {
+    .toast-sim { width:calc(100% - 32px); left:16px; right:16px; top:auto; bottom:16px; transform:translateY(140%); }
+    .toast-sim.visible { transform:translateY(0); }
+  }
 
   footer.credit { font-size:10px; color:#475569; text-align:center; flex:0 0 auto; }
 </style>
@@ -501,7 +510,7 @@ async function typeInto(el, text, opts) {
 async function showToast(msg, dur) {
   toastEl.textContent = msg;
   toastEl.classList.add('visible');
-  await wait(dur || 1400);
+  await wait(dur || 2400);
   toastEl.classList.remove('visible');
   await wait(200);
 }
@@ -563,7 +572,7 @@ const escenas = [
       mostrarEscena(1);
       activarTab('tab-mesactual');
       await checkpoint(__tok);
-      await showToast('Todo empieza en cero. Vamos a configurarla paso a paso.', 1800);
+      await showToast('Todo empieza en cero. Vamos a configurarla paso a paso.', 3100);
       await checkpoint(__tok);
     }
   },
@@ -617,7 +626,7 @@ const escenas = [
       await clickOn(document.getElementById('s2-chk-1'), {after: 200, action: () => {
         document.getElementById('s2-chk-1').checked = true;
       }});
-      await showToast('☑️ Auto⬇ tildado: los gastos pagados con esta cuenta ahora le descuentan el saldo solos', 2200);
+      await showToast('☑️ Auto⬇ tildado: los gastos pagados con esta cuenta ahora le descuentan el saldo solos', 3700);
       await checkpoint(__tok);
 
       // 3) Ingresar fondos
@@ -636,7 +645,7 @@ const escenas = [
         document.getElementById('s2-saldo-1').textContent = '$ 892.300';
       }});
       await pulseValue(document.getElementById('s2-saldo-1'));
-      await showToast('💰 El ingreso queda registrado en el historial y suma directo al saldo', 1900);
+      await showToast('💰 El ingreso queda registrado en el historial y suma directo al saldo', 3200);
       await checkpoint(__tok);
 
       // 4) Editar saldo con el lápiz
@@ -659,7 +668,7 @@ const escenas = [
         document.getElementById('s2-saldo-1').textContent = '$ 900.000';
       }});
       await pulseValue(document.getElementById('s2-saldo-1'));
-      await showToast('✏️ El lápiz corrige el saldo a mano, sin pasar por un movimiento', 1800);
+      await showToast('✏️ El lápiz corrige el saldo a mano, sin pasar por un movimiento', 3100);
       await checkpoint(__tok);
 
       // 5) Borrar una cuenta
@@ -667,7 +676,7 @@ const escenas = [
         const row = document.getElementById('s2-row-2');
         if (row) row.remove();
       }});
-      await showToast('🗑️ Borrar pide confirmación en la app real — es una acción irreversible', 1900);
+      await showToast('🗑️ Borrar pide confirmación en la app real — es una acción irreversible', 3200);
       await checkpoint(__tok);
     }
   },
@@ -687,7 +696,7 @@ const escenas = [
         lista.appendChild(b);
         document.getElementById('s3-rubro-nombre').value = '';
       }});
-      await showToast('✅ El mismo rubro sirve para clasificar servicios fijos y gastos del día a día', 1900);
+      await showToast('✅ El mismo rubro sirve para clasificar servicios fijos y gastos del día a día', 3200);
       await checkpoint(__tok);
     }
   },
@@ -714,7 +723,7 @@ const escenas = [
         document.getElementById('s4-presupuesto').value = '';
         document.getElementById('s4-vto').value = '';
       }});
-      await showToast('✅ Los servicios fijos se marcan pagados más adelante, editando "Pagado" en la fila', 1900);
+      await showToast('✅ Los servicios fijos se marcan pagados más adelante, editando "Pagado" en la fila', 3200);
       await checkpoint(__tok);
     }
   },
@@ -742,7 +751,7 @@ const escenas = [
       document.getElementById('s5-badge').textContent = '16%';
       document.getElementById('s5-badge').style.background = '#f0fdf4';
       document.getElementById('s5-badge').style.color = '#15803d';
-      await showToast('El límite se compara contra lo gastado real del mes en ese rubro', 1700);
+      await showToast('El límite se compara contra lo gastado real del mes en ese rubro', 2900);
       await checkpoint(__tok);
     }
   },
@@ -770,12 +779,12 @@ const escenas = [
         document.getElementById('s6-dialog').style.display = 'none';
         document.getElementById('s6-status').style.display = 'block';
       }});
-      await showToast('📂 Carpeta vinculada — desde ahora hace backup ahí en cada guardado', 1700);
+      await showToast('📂 Carpeta vinculada — desde ahora hace backup ahí en cada guardado', 2900);
       await checkpoint(__tok);
       await clickOn(document.getElementById('btn-salir'), {after: 250, action: () => {
         document.getElementById('s6-salida').style.display = 'block';
       }});
-      await showToast('🚪 Snapshot + backup a carpeta local, todo antes de cerrar', 1800);
+      await showToast('🚪 Snapshot + backup a carpeta local, todo antes de cerrar', 3100);
       await checkpoint(__tok);
     }
   },
@@ -803,7 +812,7 @@ const escenas = [
         document.getElementById('s7-nombre').value = '';
         document.getElementById('s7-saldo').value = '';
       }});
-      await showToast('✅ Listo — la app maneja pesos y dólares en pestañas separadas', 1700);
+      await showToast('✅ Listo — la app maneja pesos y dólares en pestañas separadas', 2900);
       await checkpoint(__tok);
     }
   }
