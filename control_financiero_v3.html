@@ -153,7 +153,12 @@
 @keyframes cf-splash-pulse { 0%,100%{opacity:0.45;} 50%{opacity:1;} }
 </style>
 
-<div class="tabs-bar" id="tabs-bar"></div>
+<div style="position:sticky;top:0;z-index:101;">
+  <div style="background:#0b1220;padding:6px 0;text-align:center;border-bottom:1px solid #1e293b;">
+    <a href="./tutorial.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;background:#4f46e5;color:white;text-decoration:none;border-radius:20px;padding:6px 16px;font-size:12px;font-weight:bold;box-shadow:0 2px 8px rgba(79,70,229,0.35);">🎬 Ver Tutorial</a>
+  </div>
+  <div class="tabs-bar" id="tabs-bar" style="position:static;"></div>
+</div>
 <div id="app-content"></div>
 
 <script>
