@@ -468,9 +468,6 @@ function cfToggleMenuMas() {
     m.appendChild(mkOpt('💾 Snapshots locales', cfMostrarSnapshots, false));
     m.appendChild(mkOpt('🗑️ Limpiar caché y recargar', limpiarCache, false));
 
-    m.appendChild(mkLabel('Otros'));
-    m.appendChild(mkOpt('❓ Ayuda', () => window.open('./instructivo.html','_blank','width=1100,height=750,resizable=yes,scrollbars=yes'), false));
-
     document.body.appendChild(m);
     setTimeout(() => document.addEventListener('click', function cerrar(){ document.getElementById('mas-menu')?.remove(); document.removeEventListener('click', cerrar); }, {once:true}), 0);
 }
