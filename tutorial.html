@@ -8,24 +8,25 @@
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; background:#0b1220; color:#e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  html, body { margin:0; padding:0; background:#0b1220; color:#e2e8f0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; height:100%; overflow:hidden; }
 
   /* ============ SHELL EXTERNO (fondo + marco de navegador) ============ */
   .stage {
-    min-height:100vh; display:flex; flex-direction:column; align-items:center;
-    padding:24px 16px 40px; gap:16px;
+    height:100vh; height:100dvh; display:flex; flex-direction:column; align-items:center;
+    padding:10px 16px 8px; gap:8px; overflow:hidden;
   }
-  .stage-title { text-align:center; max-width:720px; }
-  .stage-title h1 { font-size:22px; margin:0 0 6px; color:#f1f5f9; }
-  .stage-title p { font-size:13px; color:#94a3b8; margin:0; line-height:1.5; }
+  .stage-title { text-align:center; max-width:720px; flex:0 0 auto; }
+  .stage-title h1 { font-size:16px; margin:0 0 2px; color:#f1f5f9; }
+  .stage-title p { font-size:11px; color:#94a3b8; margin:0; line-height:1.35; }
 
   .browser-frame {
     width:100%; max-width:1180px; background:#1e293b; border-radius:12px;
     box-shadow:0 20px 60px rgba(0,0,0,0.5); overflow:hidden; border:1px solid #334155;
+    flex:1 1 auto; min-height:0; display:flex; flex-direction:column;
   }
   .browser-chrome {
-    display:flex; align-items:center; gap:10px; padding:10px 14px; background:#161f2e;
-    border-bottom:1px solid #334155;
+    display:flex; align-items:center; gap:10px; padding:8px 14px; background:#161f2e;
+    border-bottom:1px solid #334155; flex:0 0 auto;
   }
   .browser-dots { display:flex; gap:6px; }
   .browser-dots span { width:11px; height:11px; border-radius:50%; display:block; }
@@ -41,9 +42,10 @@
 
   /* ============ APP embebida ============ */
   .app-viewport {
-    position:relative; background:#0f172a; height:600px; overflow:hidden;
+    position:relative; background:#0f172a; overflow:hidden;
+    flex:1 1 auto; min-height:0;
   }
-  .app-inner { position:absolute; inset:0; overflow:hidden; }
+  .app-inner { position:absolute; inset:0; overflow:auto; }
 
   .app-tabsbar {
     display:flex; align-items:flex-end; background:#1e293b; padding:0 16px;
@@ -113,28 +115,32 @@
   /* ============ Controles del tutorial ============ */
   .controls {
     width:100%; max-width:1180px; background:#1e293b; border:1px solid #334155; border-radius:10px;
-    padding:12px 16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    padding:8px 14px; display:flex; align-items:center; gap:10px; flex-wrap:nowrap;
+    flex:0 0 auto; overflow-x:auto;
   }
-  .controls .scene-label { font-size:12px; color:#94a3b8; flex:1; min-width:180px; }
+  .controls .scene-label { font-size:11px; color:#94a3b8; flex:1; min-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .controls .scene-label strong { color:#e2e8f0; }
   .ctl-btn {
-    background:#334155; color:#e2e8f0; border:none; border-radius:6px; padding:8px 14px;
-    font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap;
+    background:#334155; color:#e2e8f0; border:none; border-radius:6px; padding:6px 12px;
+    font-size:11.5px; font-weight:bold; cursor:pointer; white-space:nowrap; flex:0 0 auto;
   }
   .ctl-btn:hover { background:#475569; }
   .ctl-btn.primary { background:#4f46e5; }
   .ctl-btn.primary:hover { background:#4338ca; }
   .ctl-btn:disabled { opacity:.4; cursor:default; }
 
-  .scene-chips { display:flex; gap:6px; flex-wrap:wrap; width:100%; max-width:1180px; justify-content:center; }
+  .scene-chips {
+    display:flex; gap:6px; flex-wrap:nowrap; width:100%; max-width:1180px;
+    overflow-x:auto; flex:0 0 auto; padding-bottom:2px;
+  }
   .chip {
     background:#1e293b; border:1px solid #334155; color:#94a3b8; border-radius:20px;
-    padding:6px 12px; font-size:11px; cursor:pointer; white-space:nowrap;
+    padding:5px 11px; font-size:10.5px; cursor:pointer; white-space:nowrap; flex:0 0 auto;
   }
   .chip:hover { border-color:#4f46e5; color:#e2e8f0; }
   .chip.activo { background:#4f46e5; border-color:#4f46e5; color:white; }
 
-  .progress-bar { width:100%; max-width:1180px; height:4px; background:#1e293b; border-radius:2px; overflow:hidden; }
+  .progress-bar { width:100%; max-width:1180px; height:3px; background:#1e293b; border-radius:2px; overflow:hidden; flex:0 0 auto; }
   .progress-fill { height:100%; background:#4f46e5; width:0%; transition:width .3s linear; }
 
   .toast-sim {
@@ -145,7 +151,7 @@
   }
   .toast-sim.visible { opacity:1; }
 
-  footer.credit { font-size:11px; color:#475569; text-align:center; padding-top:6px; }
+  footer.credit { font-size:10px; color:#475569; text-align:center; flex:0 0 auto; }
 </style>
 </head>
 <body>
